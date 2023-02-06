@@ -2,6 +2,7 @@
 # Create one or more Azure VMs with all needed dependencies
 # Author: Grant Marcroft
 
+# Tag with service request number
 tag=""
 
 read -p "Does this involve an active Microsoft Support Request? (y|n): " srbool
