@@ -40,24 +40,25 @@ read -p "Existing SSH Key Pair? (y|n): " key_exists
 if [ $key_exists == "y" ]; then
         read -p "Path To Public Key: " pub_key
         ssh_config="--ssh-key-value $pub_key"
-else 
+else
         ssh_config="--generate-ssh-keys"
 fi
 
 read -p "Select size (Default is Standard_DS1_v2): " size
-if [ -z $size ]; then
-        size="Standard_DS1_v2"
-fi
 
-read -p "Image to use: (Default is urnAlias: suse:sles-15-sp3:gen2:latest): " image
-if [ -z $image ]; then
-        image="suse:sles-15-sp3:gen2:latest"
-fi
+if [ -z $size ]; then size="Standard_DS1_v2"; fi
+
+read -p "Image to use: (Default is urnAlias: suse:sles-15-sp4:gen2:latest): " image
+
+if [ -z $image ]; then image="suse:sles-15-sp4:gen2:latest"; fi
 
 az vm create --resource-group $group --name $vm_name --image $image --size $size --public-ip-sku Standard $ssh_config --vnet-name $vnet --subnet $subnet --nsg $nsg $tag
 
-read -p "Auto-Shutdown Enabled? (y|n):" autoshutdown
-if [ $autoshutdown != "n" ]; then
-        read -p "Time in UTC for auto-shutdown (format hhmm): " time
+# Auto-shutdown
+read -p "Auto-Shutdown Enabled? defaults to yes (y|n): " autoshutdown
+if [ -z $autoshutdown ]; then autoshutdown="y"; fi
+if [ "$autoshutdown" != "n" ]; then
+        read -p "Time in UTC for auto-shutdown (format hhmm, default 0000): " time
+        if [ -z $time ]; then time="0000"; fi
         az vm auto-shutdown --resource-group $group --name $vm_name --time $time
 fi
