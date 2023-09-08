@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -i
 # Create one or more Azure VMs with all needed dependencies
 # Author: Grant Marcroft
 
