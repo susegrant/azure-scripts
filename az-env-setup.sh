@@ -30,13 +30,25 @@ function rg_create() {
 function network_create() {
         echo -e "-------------\nNetwork Setup\n-------------"
         read -p "VNet name: " vnet
-        read -p "Subnet name: " subnet 
+        read -p "Subnet name: " subnet
         read -p "Network Security Group name: " nsg
         az network nsg create --resource-group $group --name $nsg $tag
-        read -p "Add your public IP to allowed SSH client IPs in NSG? (y|n): " allow_ssh
-        if [ $allow_ssh == "y" ]; then
-                az network nsg rule create --resource-group $group --nsg-name $nsg --name "Allow_SSH" --priority 100 --access Allow --source-address-prefixes $(curl -s ifconfig.me)/32 --destination-port-ranges 22 --protocol Tcp --description="Accept SSH connections from my public IP"
-        fi 
+
+        read -p "Add public IPv4 address, IPv6 address, both or the open Internet to allowed SSH client IPs in NSG? (4|6|b|Internet|n): " allow_ssh
+        if [ $allow_ssh == "4" ]; then
+                az network nsg rule create --resource-group $group --nsg-name $nsg --name "Allow_SSH_v4" --priority 101 --access Allow --source-address-prefixes $(curl -s https://ipv4.icanhazip.com:443)/32 --destination-port-ranges 22 --protocol Tcp --description="Accept SSH connections from my public IPv4 address"
+        elif [ $allow_ssh == "6" ]; then
+                az network nsg rule create --resource-group $group --nsg-name $nsg --name "Allow_SSH_v6" --priority 102 --access Allow --source-address-prefixes $(curl -s https://ipv6.icanhazip.com:443) --destination-port-ranges 22 --protocol Tcp --description="Accept SSH connections from my IPv6 address"
+        elif [ $allow_ssh == "b" ]; then
+                az network nsg rule create --resource-group $group --nsg-name $nsg --name "Allow_SSH_v4" --priority 101 --access Allow --source-address-prefixes $(curl -s https://ipv4.icanhazip.com:443)/32 --destination-port-ranges 22 --protocol Tcp --description="Accept SSH connections from my public IPv4 address"
+                az network nsg rule create --resource-group $group --nsg-name $nsg --name "Allow_SSH_v6" --priority 102 --access Allow --source-address-prefixes $(curl -s https://ipv6.icanhazip.com:443) --destination-port-ranges 22 --protocol Tcp --description="Accept SSH connections from my IPv6 address"
+        elif [ $allow_ssh == "Internet" ]; then
+                read -p "Are you sure you want to allow access from the open Internet? (y|n): " internet
+                if [ $internet == "y" ]; then
+                        az network nsg rule create --resource-group $group --nsg-name $nsg --name "Allow_SSH_Internet" --priority 103 --access Allow --source-address-prefixes Internet --destination-port-ranges 22 --protocol Tcp --description="Accept SSH connections from the open Internet"
+                fi
+        else echo "Continuing without adding IPs. Use azure-update-ssh-ip.sh later to add allowed IPs"
+        fi
         az network vnet create --resource-group $group --name $vnet --address-prefix 10.0.0.0/16 --subnet-name $subnet --subnet-prefix 10.0.0.0/24 --network-security-group $nsg $tag
 };
 
@@ -59,20 +71,22 @@ function vm_create() {
                 else
                 ssh_config="--generate-ssh-keys"
         fi
+
         read -p "Select size (Default is Standard_DS1_v2): " size
-        if [ -z $size ]; then
-                size="Standard_DS1_v2"
-        fi
-        read -p "Image to use (Default is suse:sles-15-sp3:gen1:latest): " image
-        if [ -z $image ]; then
-                image="suse:sles-15-sp3:gen1:latest"
-        fi
+        if [ -z $size ]; then size="Standard_DS1_v2"; fi
+
+        read -p "Image to use (Default is suse:sles-15-sp4:gen2:latest): " image
+        if [ -z $image ]; then image="suse:sles-15-sp4:gen2:latest"; fi
+
         az vm create --resource-group $group --name $vm_name --image $image --size $size --public-ip-sku Standard $ssh_config --vnet-name $vnet --subnet $subnet --nsg $nsg $tag
 
-        read -p "Auto-Shutdown Enabled? (y|n):" autoshutdown
+        # Auto-shutdown
+        read -p "Auto-Shutdown Enabled? defaults to yes (y|n): " autoshutdown
+        if [ -z $autoshutdown ]; then autoshutdown="y"; fi
         if [ $autoshutdown != "n" ]; then
-                read -p "Time in UTC for auto-shutdown (format hhmm): " time
-                az vm auto-shutdown --resource-group $group --name $vm_name --time $time
+                read -p "Time in UTC for auto-shutdown (format hhmm, default 0000): " time
+                if [ -z $time ]; then time="0000"; fi
+        az vm auto-shutdown --resource-group $group --name $vm_name --time $time
         fi
 };
 
