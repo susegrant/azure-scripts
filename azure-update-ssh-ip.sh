@@ -1,4 +1,6 @@
 #!/bin/bash
+# Add allowed SSH IPs to Network Security Group
+# Author: Grant Marcroft
 
 read -p "Resource Group: " group
 read -p "NSG name: " nsg
