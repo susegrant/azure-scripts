@@ -13,4 +13,4 @@ bash <(curl -s https://raw.githubusercontent.com/susegrant/azure-scripts/main/bu
 
 Allow SSH access to network security group with this command:
 
-bash <(curl -s https://raw.githubusercontent.com/susegrant/azure-scripts/main/azure-allow-ssh-ip.sh)
+bash <(curl -s https://raw.githubusercontent.com/susegrant/azure-scripts/main/azure-update-ssh-ip.sh)
