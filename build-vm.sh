@@ -1,7 +1,7 @@
 #!/bin/bash
 # Add VMs to existing RG and Network
 # Author: Grant Marcroft
-
+ 
 # Tag with service request number
 tag=""
 
