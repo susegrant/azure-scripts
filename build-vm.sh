@@ -1,8 +1,8 @@
 #!/bin/bash
 # Add VMs to existing RG and Network
 # Author: Grant Marcroft
- 
-# Tag with service request number
+
+# Tag with Service Request number
 tag=""
 
 read -p "Does this involve an active Microsoft Support Request? (y|n): " srbool
